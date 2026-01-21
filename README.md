@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BloodConnect - Blood Donation Platform
 
 A full-stack web application for connecting blood donors with those in need. Built with modern technologies for scalability and user experience.
@@ -251,3 +252,7 @@ For issues and questions, please open an issue in the repository.
 - Mobile app
 - Payment integration
 - Analytics dashboard 
+=======
+# bloodconnect
+Application designed to streamline the blood donation ecosystem. 
+>>>>>>> dcfedec72aba66a07bf29a4312c014d6838d1a29
