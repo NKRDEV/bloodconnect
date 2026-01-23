@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database.database import get_db
+from app.core.dependencies import get_current_user
 from app.models.models import BloodRequest, User
 from app.schemas.schemas import (
     BloodRequestCreate,
@@ -43,6 +44,7 @@ def get_blood_request(request_id: int, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=list[BloodRequestResponse])
 def list_blood_requests(
+    current_user: User = Depends(get_current_user),
     status_filter: str = None,
     skip: int = 0,
     limit: int = 10,

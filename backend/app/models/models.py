@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum, ForeignKey
 from app.database.database import Base
 import enum
 
@@ -58,3 +58,12 @@ class Donation(Base):
     quantity = Column(Integer)  # in ml
     donation_date = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer,primary_key=True)
+    users_id = Column(Integer,ForeignKey("users.id"),nullable=False)
+    token = Column(String,unique=True,index=True,nullable=True)
+    expires_at =Column(DateTime,nullable=False)
+    used = Column(Boolean,default=False)
