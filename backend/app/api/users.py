@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.models.models import User,PasswordResetToken
 from app.core.security import hash_password,create_access_token,verify
+from app.core.email import send_reset_email
 import secrets
 from datetime import datetime, timedelta
 from app.schemas.schemas import UserCreate, UserResponse, UserUpdate,LoginRequest, Token,ForgotPasswordRequest, ResetPasswordRequest
@@ -92,7 +93,7 @@ def logout():
     return {"message": "Logout successful. Delete token on client side."}
 
 @router.post("/forgot-password")
-def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
 
     if not user:
@@ -108,7 +109,7 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     db.add(reset)
     db.commit()
-
+    await send_reset_email(user.email, token)
     return {"message": "If the email exists, a reset link was sent"}
 
 @router.post("/reset-password")

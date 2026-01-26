@@ -27,3 +27,6 @@ def get_current_user(
         raise HTTPException(status_code=401)
 
     return user
+
+
+

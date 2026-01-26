@@ -1,5 +1,5 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -12,6 +12,14 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "BloodConnect"
     PROJECT_VERSION: str = "0.1.0"
 
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+    EMAIL_FROM: str
+
+    FRONTEND_URL: str 
+
     # CORS
     ALLOWED_ORIGINS: list = [
         "http://localhost:3000",
@@ -20,9 +28,10 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8000",
     ]
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="forbid", 
+    )
 
 settings = Settings()
