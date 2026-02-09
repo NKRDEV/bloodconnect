@@ -4,13 +4,14 @@ from app.database.database import get_db
 from app.models.models import User,PasswordResetToken
 from app.core.security import hash_password,create_access_token,verify
 from app.core.email import send_reset_email
+from app.core.dependencies import require_role
 import secrets
 from datetime import datetime, timedelta
 from app.schemas.schemas import UserCreate, UserResponse, UserUpdate,LoginRequest, Token,ForgotPasswordRequest, ResetPasswordRequest
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-
+# Donor Registration
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # Check if user already exists
@@ -23,11 +24,20 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     user.password = hashed_password   
 
     db_user = User(**user.dict())
+    db_user.role="donor"
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
-
+# List users with RBAC
+@router.get("/users", response_model=list[UserResponse])
+def list_users(
+    skip: int = 0,
+    limit: int = 10,
+    _: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    return db.query(User).offset(skip).limit(limit).all()
 
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
@@ -39,39 +49,49 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-@router.get("/", response_model=list[UserResponse])
-def list_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    users = db.query(User).offset(skip).limit(limit).all()
-    return users
-
-
 @router.put("/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_db)):
+def update_user(
+    user_id: int,
+    user_update: UserUpdate,
+    _: User = Depends(require_role("admin")), 
+    db: Session = Depends(get_db),
+):
     db_user = db.query(User).filter(User.id == user_id).first()
+
     if not db_user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
         )
 
-    update_data = user_update.dict(exclude_unset=True)
+    update_data = user_update.model_dump(exclude_unset=True)
+
     for field, value in update_data.items():
         setattr(db_user, field, value)
 
-    db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(
+    user_id: int,
+    _: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db),
+):
     db_user = db.query(User).filter(User.id == user_id).first()
+
     if not db_user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
         )
-    db.delete(db_user)
+
+    db_user.is_active = False
+
     db.commit()
+
 
 
 

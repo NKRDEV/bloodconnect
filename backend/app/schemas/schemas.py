@@ -25,7 +25,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     phone: str
-    role: UserRole = UserRole.DONOR
+    #role: UserRole = UserRole.DONOR
     blood_type: Optional[BloodType] = None
 
 
